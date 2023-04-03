@@ -1,0 +1,24 @@
+Slightly:
+Max profit : 898300
+Total packets : 7820
+DPMSS started
+Heuristic Score, total dropped, critical dropped:
+728970 2324 90
+Heuristic algo time taken: 
+11054
+Moderate:
+Max profit : 965300
+Total packets : 8050
+DPMSS started
+Heuristic Score, total dropped, critical dropped:
+766080 2995 50
+Heuristic algo time taken:
+6850
+very poor:
+Max profit : 962800
+Total packets : 7890
+DPMSS started
+Heuristic Score, total dropped, critical dropped:
+505240 4862 46
+Heuristic algo time taken: 
+11631

@@ -1,0 +1,42 @@
+36
+0 round:
+============
+Batch created
+Heuristic Score, total dropped, critical dropped:
+11370 54 11
+DPMSS algo executed
+Allocated to free RUs and empty spaces
+1 round:
+============
+Batch created
+Heuristic Score, total dropped, critical dropped:
+16160 97 17
+DPMSS algo executed
+Allocated to free RUs and empty spaces
+2 round:
+============
+Batch created
+Heuristic Score, total dropped, critical dropped:
+15300 115 15
+DPMSS algo executed
+Allocated to free RUs and empty spaces
+3 round:
+============
+Batch created
+Heuristic Score, total dropped, critical dropped:
+13090 136 19
+DPMSS algo executed
+Allocated to free RUs and empty spaces
+4 round:
+============
+Batch created
+Heuristic Score, total dropped, critical dropped:
+17060 157 23
+DPMSS algo executed
+Allocated to free RUs and empty spaces
+
+==========end of round simulation============
+2 2294.44 3314030
+NDP throughput: 10.6049 Mb/s
+Transmission time given to NDP: 1004.4 nunits
+Resource (Tonnes) given to NDP: 1878024

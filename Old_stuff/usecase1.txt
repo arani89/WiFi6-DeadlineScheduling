@@ -1,0 +1,14 @@
+1 1
+200 4 20
+5
+1 64 128 1 10 10
+2 128 256 2 10 10
+4 256 512 4 10 10
+8 512 1024 8 10 10
+16 1024 1522 16 10 10
+1 1000
+
+The first line contains the number of test cases, T and defines the test case number(here 0) which ranges from 0 to 4.
+The second line contains the timeperiod, granularity and critical threshold.
+The third line contains the number of stations(stations).
+The corresponding station number of lines contain Time period | size | delay | penalty | nodes(general)

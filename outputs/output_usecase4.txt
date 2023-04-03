@@ -1,0 +1,25 @@
+202
+0 round:
+============
+Batch created
+Heuristic Score, total dropped, critical dropped:
+497120 4877 73
+DPMSS algo executed
+Allocated to free RUs and empty spaces
+1 round:
+============
+Batch created
+Heuristic Score, total dropped, critical dropped:
+264160 8786 73
+DPMSS algo executed
+Allocated to free RUs and empty spaces
+
+==========end of round simulation============
+-1 -2 0
+Packets scheduled: 6345
+Packets dropped: 9535
+Total packets: 15880
+%age Critical packets dropped: 69.0349
+%age Non critical packets dropped: 52.0784
+Percentage of packets dropped: 60.0441
+Total profit: 761280

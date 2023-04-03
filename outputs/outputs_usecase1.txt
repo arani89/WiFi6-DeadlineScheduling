@@ -1,0 +1,12 @@
+Max profit : 0
+Total packets : 0
+Heuristic Score, total dropped, critical dropped:
+0 0 0
+New EDF Score, total dropped, critical dropped: 
+0 0 0
+New LRF Score, total dropped, critical dropped: 
+0 0 0
+Baseline NLRF Score, total dropped, critical dropped: 
+0 0 0
+Heuristic algo time taken: 
+77

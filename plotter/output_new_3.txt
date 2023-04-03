@@ -1,0 +1,35 @@
+Max profit : 8205
+Total packets : 960
+Heuristic Score, total dropped, critical dropped:
+7554 351 20
+Heuristic Score, total dropped, critical dropped:
+7465 440 20
+New EDF Score, total dropped, critical dropped: 
+7420 455 20
+New LRF Score, total dropped, critical dropped: 
+7360 500 20
+Baseline NLRF Score, total dropped, critical dropped: 
+7360 500 20
+LSDS algo time taken: 
+23
+LSDSF algo time taken: 
+8
+
+Max profit : 8205
+Total packets : 960
+DPMSS started
+Heuristic Score, total dropped, critical dropped:
+7865 40 20
+New EDF Score, total dropped, critical dropped: 
+7226 379 40
+New LRF Score, total dropped, critical dropped: 
+7360 500 20
+Baseline NLRF Score, total dropped, critical dropped: 
+7360 500 20
+DPMSS started
+Heuristic Score, total dropped, critical dropped:
+7465 440 20
+LSDS algo time taken: 
+25
+LSDSF algo time taken: 
+5

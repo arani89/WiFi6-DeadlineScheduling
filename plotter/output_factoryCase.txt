@@ -1,0 +1,16 @@
+Max profit : 25300
+Total packets : 99
+Heuristic Score, total dropped, critical dropped:
+25300 0 0
+Heuristic Score, total dropped, critical dropped:
+24150 28 0
+New EDF Score, total dropped, critical dropped: 
+17300 16 16
+New LRF Score, total dropped, critical dropped: 
+17300 16 16
+Baseline NLRF Score, total dropped, critical dropped: 
+17300 16 16
+LSDS algo time taken: 
+75
+LSDSF algo time taken: 
+4
