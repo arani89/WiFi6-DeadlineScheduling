@@ -42,67 +42,32 @@ config, which
 vector<vector<int>> selectIndicesForConfig(int itvl_start, int itvl_end, vector<int> &availablePackets, vector<int> &newAvailablePackets, vector<Packet>& packets, double granularity, double packetDropFactor, Config &userconfig){
     // re-evaluate master config
     // cout<<configs.size()<<" is configs size\n";
-  
+
     priority_queue<pair<int, int>, vector<pair<int, int>>, myComparator> topPackets[userconfig.maxRU+1];
-    // vector<int> retry(0);
     for(int& ii: availablePackets){
-        Packet& pckt = packets[ii];
+        int ii2 = ii;
+        Packet pckt = packets[ii2];
         bool assigned = false;
         for(int mode = RU_26; mode <= userconfig.maxRU; ++mode){
-            if(packetMatchesInterval(itvl_start, itvl_end, pckt, mode, granularity) && masterconfig[mode] > 0){
-                int modecpy = mode;
-                if(topPackets[modecpy].size() < masterconfig[modecpy]){
-                    topPackets[modecpy].push({pckt.penalty, ii});
+            if(masterconfig[mode] == 0) break;
+            if(packetMatchesInterval(itvl_start, itvl_end, pckt, mode, granularity)){
+                if(topPackets[mode].size() < masterconfig[mode]){
+                    topPackets[mode].push({pckt.penalty, ii2});
                     assigned = true;
                     break;
-                }
-                Packet pckt2;
-                bool assigned2 = true;
-                int ii2=ii, ii3;
-
-                if(topPackets[modecpy].top().first < pckt.penalty){
-                    // pckt2 = topPackets[modecpy].top().first;
-                    ii3 = topPackets[modecpy].top().second;
-                    pckt2 = packets[ii3];
-                    topPackets[modecpy].pop();
-                    topPackets[modecpy].push({pckt.penalty, ii2});
-                    ++modecpy;
-                    pckt = pckt2;
-                    ii2 = ii3;
-                    assigned = true;
-                    assigned2 = false;
-                }
-                while(!assigned2 && modecpy<=userconfig.maxRU){
-                    if(masterconfig[modecpy] == 0) break;
-                    if(topPackets[modecpy].size() < masterconfig[modecpy]){
-                        topPackets[modecpy].push({pckt.penalty, ii2});
-                        assigned2 = true;
-                        break;
-                    }else{
-                        if(topPackets[modecpy].top().first < pckt.penalty){
-                            // pckt2 = topPackets[modecpy].top().first;
-                            ii3 = topPackets[modecpy].top().second;
-                            pckt2 = packets[ii3];
-                            topPackets[modecpy].pop();
-                            topPackets[modecpy].push({pckt.penalty, ii2});
-                            ++modecpy;
-                            pckt = pckt2;
-                            ii2=ii3;
-                        }else{
-                            break;
-                        }
-                    }
-                }
-                if(assigned && !assigned2){
-                    newAvailablePackets.push_back(ii2);
-                    break;
+                } else if(topPackets[mode].top().first < pckt.penalty){
+                    topPackets[mode].push({pckt.penalty, ii2});
+                    ii2 = topPackets[mode].top().second;
+                    pckt = packets[ii2];
+                    topPackets[mode].pop();
                 }
             }
         }
-        if(!assigned){
-            newAvailablePackets.push_back(ii);
-        }
+        if(assigned == false){
+            newAvailablePackets.push_back(ii2);
+        } 
     }
+
     vector<vector<int>> bestpckts(userconfig.maxRU+1);
     for(int mode = userconfig.maxRU; mode >= RU_26; --mode){
         while(!topPackets[mode].empty()){
