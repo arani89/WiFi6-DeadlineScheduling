@@ -94,9 +94,9 @@ int main(int argc, char **argv)
     newBaseline(packets, 0, timeperiod, LRF, stations_count, criticalThreshold, userconfig);
     // NLRF
     baselineNLRF(packets, 0, timeperiod, stations_count, criticalThreshold, userconfig);
-    configs = {{0, 0, 0, 0, 0, 0, 74}};
+    // configs = {{0, 0, 0, 0, 0, 0, 74}};
     auto t2 = high_resolution_clock::now();
-    DPMSS(packets, 0, timeperiod, stations_count, criticalThreshold, granularity, -1, userconfig);
+    // DPMSS(packets, 0, timeperiod, stations_count, criticalThreshold, granularity, -1, userconfig);
     auto t3 = high_resolution_clock::now();
     auto dur1 = duration_cast<microseconds>(t1 - start);
     auto dur2 = duration_cast<microseconds>(t3 - t2);

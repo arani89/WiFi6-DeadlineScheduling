@@ -66,7 +66,7 @@ void baselineNLRF(vector<Packet> &packets, int start_time, int T, int stations_c
                 Packet& pckt = packets[j];
                 if(pckt.arrival > newstart) continue;
                 bool assigned = false;
-                for(int mode = RU_26; mode >= userconfig.maxRU; ++mode){
+                for(int mode = RU_26; mode <= userconfig.maxRU; ++mode){
                     if((config[mode]>0) && (calcTransmissionTimeMs(pckt.datasize, mode, pckt.stationId)+newstart <= min(pckt.deadline, (double)T - 1))){
                         config[mode]--;
                         assigned = true;
@@ -95,7 +95,7 @@ void baselineNLRF(vector<Packet> &packets, int start_time, int T, int stations_c
         else {
             //figure out the packets that were assigned here
             int m=0;
-            for(int j = RU_26; j < userconfig.maxRU; ++j){
+            for(int j = RU_26; j <= userconfig.maxRU; ++j){
                 m += cfig[j];
             }
             //try to fit first m packets if possible
@@ -103,7 +103,7 @@ void baselineNLRF(vector<Packet> &packets, int start_time, int T, int stations_c
                 Packet& pckt = packets[j];
                 if(pckt.arrival > newstart) continue;
                 bool assigned = false;
-                for(int mode = RU_26; mode >= userconfig.maxRU; ++mode){
+                for(int mode = RU_26; mode <= userconfig.maxRU; ++mode){
                     if((cfig[mode]>0) && calcTransmissionTimeMs(pckt.datasize, mode, pckt.stationId)+newstart <= min(pckt.deadline, (double)T - 1)){
                         cfig[mode]--;
                         assigned = true;
