@@ -15,7 +15,7 @@ Give the current packets, the time period, the stations_count
 */
 
 
-void baselineNLRF(vector<Packet> &packets, int start_time, int T, int stations_count, int criticalThreshold){
+void baselineNLRF(vector<Packet> &packets, int start_time, int T, int stations_count, int criticalThreshold, Config &userconfig){
     vector<int> packetsTransmitted(stations_count, 0); 
     vector<int> packetsGenTillNow(stations_count, 0); 
     vector<vector<Packet>> scheduledPackets(stations_count);
@@ -53,7 +53,10 @@ void baselineNLRF(vector<Packet> &packets, int start_time, int T, int stations_c
         //iterate through all configurations
         for(auto copyconfig: configs){
             vector<int> config(copyconfig.begin(), copyconfig.end());
-            int m = config[RU_1992] + config[RU_996] + config[RU_484] + config[RU_242] + config[RU_106] + config[RU_52] + config[RU_26];
+            int m=0;
+            for(int j = RU_26; j < userconfig.maxRU; ++j){
+                m += config[j];
+            }
             // cout<<m<<" : ";
             int windowsize = 0;
             int curscore = 0;
@@ -63,7 +66,7 @@ void baselineNLRF(vector<Packet> &packets, int start_time, int T, int stations_c
                 Packet& pckt = packets[j];
                 if(pckt.arrival > newstart) continue;
                 bool assigned = false;
-                for(int mode = RU_26; mode >= RU_1992; --mode){
+                for(int mode = RU_26; mode >= userconfig.maxRU; ++mode){
                     if((config[mode]>0) && (calcTransmissionTimeMs(pckt.datasize, mode, pckt.stationId)+newstart <= min(pckt.deadline, (double)T - 1))){
                         config[mode]--;
                         assigned = true;
@@ -91,13 +94,16 @@ void baselineNLRF(vector<Packet> &packets, int start_time, int T, int stations_c
         if(cfig.size() == 0) ++i;
         else {
             //figure out the packets that were assigned here
-            int m = cfig[RU_1992] + cfig[RU_996] + cfig[RU_484] + cfig[RU_242] + cfig[RU_106] + cfig[RU_52] + cfig[RU_26];
+            int m=0;
+            for(int j = RU_26; j < userconfig.maxRU; ++j){
+                m += cfig[j];
+            }
             //try to fit first m packets if possible
             for(int j = i; j < min(i+m, lenPackets); ++j){
                 Packet& pckt = packets[j];
                 if(pckt.arrival > newstart) continue;
                 bool assigned = false;
-                for(int mode = RU_26; mode >= RU_1992; --mode){
+                for(int mode = RU_26; mode >= userconfig.maxRU; ++mode){
                     if((cfig[mode]>0) && calcTransmissionTimeMs(pckt.datasize, mode, pckt.stationId)+newstart <= min(pckt.deadline, (double)T - 1)){
                         cfig[mode]--;
                         assigned = true;
@@ -149,7 +155,7 @@ bool lrf(Packet& p1, Packet& p2){
 #define EDF 1
 #define LRF 2
 
-void newBaseline(vector<Packet> &packets, int start_time, int T, int opt, int stations_count, int criticalThreshold){
+void newBaseline(vector<Packet> &packets, int start_time, int T, int opt, int stations_count, int criticalThreshold, Config userconfig){
     if(opt == EDF){
         sort(packets.begin(), packets.end(), edf);
     } else if(opt == LRF){
@@ -184,7 +190,10 @@ void newBaseline(vector<Packet> &packets, int start_time, int T, int opt, int st
             vector<int> config(copyconfig);
             int tempTotalAssigned = 0;
             int tempCriticalAssigned = 0;
-            int m = config[RU_1992] + config[RU_996] + config[RU_484] + config[RU_242] + config[RU_106] + config[RU_52] + config[RU_26];
+            int m=0;
+            for(int mode = userconfig.maxRU; mode >= RU_26; --mode){
+                m += config[mode];
+            }
             int windowsize = 0;
             int curscore = 0;
             //try to fit first m packets if possible
@@ -192,7 +201,7 @@ void newBaseline(vector<Packet> &packets, int start_time, int T, int opt, int st
                 Packet& pckt = packets[j];
                 if(pckt.arrival > newstart) continue;
                 bool assigned = false;
-                for(int mode = RU_26; mode >= RU_1992; --mode){
+                for(int mode = RU_26; mode <= userconfig.maxRU; ++mode){
                     if((config[mode]>0) && calcTransmissionTimeMs(pckt.datasize, mode, pckt.stationId)+newstart <= min(pckt.deadline, (double)T - 1)){
                         config[mode]--;
                         assigned = true;
@@ -231,7 +240,11 @@ void newBaseline(vector<Packet> &packets, int start_time, int T, int opt, int st
         // -----
         // -----
         if(cfig.size() == 0) ++i;
-        else i += cfig[RU_1992] + cfig[RU_996] + cfig[RU_484] + cfig[RU_242] + cfig[RU_106] + cfig[RU_52] + cfig[RU_26]; 
+        else {
+            for(int mode = userconfig.maxRU; mode >= RU_26; --mode){
+                i += cfig[mode];
+            }
+        }
     }
     //output
     if(opt == EDF){

@@ -39,16 +39,16 @@ int total_critical_packets = 0;
 Given interval timestamps and the current available packets, figure out best packets for the master
 config, which 
 *********************************/
-vector<vector<int>> selectIndicesForConfig(int itvl_start, int itvl_end, vector<int> &availablePackets, vector<int> &newAvailablePackets, vector<Packet>& packets, double granularity, double packetDropFactor){
+vector<vector<int>> selectIndicesForConfig(int itvl_start, int itvl_end, vector<int> &availablePackets, vector<int> &newAvailablePackets, vector<Packet>& packets, double granularity, double packetDropFactor, Config &userconfig){
     // re-evaluate master config
     // cout<<configs.size()<<" is configs size\n";
   
-    priority_queue<pair<int, int>, vector<pair<int, int>>, myComparator> topPackets[RU_26+1];
+    priority_queue<pair<int, int>, vector<pair<int, int>>, myComparator> topPackets[userconfig.maxRU+1];
     // vector<int> retry(0);
     for(int& ii: availablePackets){
         Packet& pckt = packets[ii];
         bool assigned = false;
-        for(int mode = RU_26; mode >= RU_1992; --mode){
+        for(int mode = RU_26; mode <= userconfig.maxRU; ++mode){
             if(packetMatchesInterval(itvl_start, itvl_end, pckt, mode, granularity) && masterconfig[mode] > 0){
                 int modecpy = mode;
                 if(topPackets[modecpy].size() < masterconfig[modecpy]){
@@ -66,13 +66,13 @@ vector<vector<int>> selectIndicesForConfig(int itvl_start, int itvl_end, vector<
                     pckt2 = packets[ii3];
                     topPackets[modecpy].pop();
                     topPackets[modecpy].push({pckt.penalty, ii2});
-                    --modecpy;
+                    ++modecpy;
                     pckt = pckt2;
                     ii2 = ii3;
                     assigned = true;
                     assigned2 = false;
                 }
-                while(!assigned2 && modecpy>=RU_1992){
+                while(!assigned2 && modecpy<=userconfig.maxRU){
                     if(masterconfig[modecpy] == 0) break;
                     if(topPackets[modecpy].size() < masterconfig[modecpy]){
                         topPackets[modecpy].push({pckt.penalty, ii2});
@@ -85,7 +85,7 @@ vector<vector<int>> selectIndicesForConfig(int itvl_start, int itvl_end, vector<
                             pckt2 = packets[ii3];
                             topPackets[modecpy].pop();
                             topPackets[modecpy].push({pckt.penalty, ii2});
-                            --modecpy;
+                            ++modecpy;
                             pckt = pckt2;
                             ii2=ii3;
                         }else{
@@ -103,8 +103,8 @@ vector<vector<int>> selectIndicesForConfig(int itvl_start, int itvl_end, vector<
             newAvailablePackets.push_back(ii);
         }
     }
-    vector<vector<int>> bestpckts(RU_26+1);
-    for(int mode = RU_1992; mode <= RU_26; ++mode){
+    vector<vector<int>> bestpckts(userconfig.maxRU+1);
+    for(int mode = userconfig.maxRU; mode >= RU_26; --mode){
         while(!topPackets[mode].empty()){
             bestpckts[mode].push_back(topPackets[mode].top().second); topPackets[mode].pop();
         }
@@ -114,7 +114,7 @@ vector<vector<int>> selectIndicesForConfig(int itvl_start, int itvl_end, vector<
 }
 
 // The proposed heuristic algorithm
-vector<IntervalData> DPMSS(vector<Packet>& packets, int start_time, int T, int stations_count, int criticalThreshold, double granularity, double packetDropFactor){
+vector<IntervalData> DPMSS(vector<Packet>& packets, int start_time, int T, int stations_count, int criticalThreshold, double granularity, double packetDropFactor, Config &userconfig){
     const double alpha = 2;
     vector<vector<Packet>> scheduledPackets(stations_count);
     vector<int> availableIndices;  // to reference packets with integers
@@ -122,10 +122,10 @@ vector<IntervalData> DPMSS(vector<Packet>& packets, int start_time, int T, int s
     for(int i = 0; i < packets.size(); ++i){
         availableIndices.push_back(i);
     }
-    for(int mode = RU_26; mode >= RU_1992; --mode){
-        masterconfig[mode] = 0;
+    for(int mode = RU_26; mode <= userconfig.maxRU; ++mode){
+        userconfig.masterconfig[mode] = 0;
         for(int i = 0; i < (int)configs.size(); ++i){
-            masterconfig[mode] = max(masterconfig[mode], configs[i][mode]);
+            userconfig.masterconfig[mode] = max(userconfig.masterconfig[mode], configs[i][mode]);
         }
     }
     vector<IntervalData> selectedIntervals;
@@ -143,10 +143,10 @@ vector<IntervalData> DPMSS(vector<Packet>& packets, int start_time, int T, int s
             newAvailableIndices.clear();   
 
             // greedy assignment of available packets
-            vector<vector<int>> bestids = selectIndicesForConfig(intervalStart, intervalEnd, availableIndices, newAvailableIndices, packets, granularity, packetDropFactor);
+            vector<vector<int>> bestids = selectIndicesForConfig(intervalStart, intervalEnd, availableIndices, newAvailableIndices, packets, granularity, packetDropFactor, userconfig);
                 // calc prefix sum
             vector<vector<int>> prefsum(bestids);
-            for(int mode = RU_1992; mode <= RU_26; ++mode){
+            for(int mode = userconfig.maxRU; mode >= RU_26; --mode){
                 for(int ctr = 0; ctr < prefsum[mode].size(); ++ctr){
                     int currid = bestids[mode][ctr];
                     if(ctr == 0) prefsum[mode][ctr] = packets[currid].penalty;
@@ -158,7 +158,7 @@ vector<IntervalData> DPMSS(vector<Packet>& packets, int start_time, int T, int s
             for(vector<int>& config: configs){
                 //calc score
                 int curscore = 0;
-                for(int mode = RU_1992; mode <= RU_26; ++mode){
+                for(int mode = userconfig.maxRU; mode >= RU_26; --mode){
                     int till = min((int)bestids[mode].size(), config[mode]) - 1;
                     if(till < 0) continue;
                     curscore += prefsum[mode][till];
@@ -174,7 +174,7 @@ vector<IntervalData> DPMSS(vector<Packet>& packets, int start_time, int T, int s
             // fill the current interval
             currInterval.packets.clear();
             currInterval.setConfig(bestconfig);
-            for(int mode = RU_1992; mode <= RU_26; ++mode){
+            for(int mode = userconfig.maxRU; mode >= RU_26; --mode){
                 int till = min((int)bestids[mode].size(), bestconfig[mode]) - 1;  // index till which to take packets
                 if(till >= 0)
                     currInterval.updateFreeSlots(mode, bestconfig[mode] - till-1);
@@ -228,7 +228,7 @@ vector<IntervalData> DPMSS(vector<Packet>& packets, int start_time, int T, int s
         Packet& pckt = packets[ii];
         bool assigned = false;
         for(IntervalData& itvl: selectedIntervals){
-            for(int mode = RU_26; mode >= RU_1992; --mode){
+            for(int mode = RU_26; mode <= userconfig.maxRU; ++mode){
                 if(itvl.freeslots[mode] <= 0) continue;
                 if(packetMatchesInterval(itvl.start, itvl.end, pckt, mode, granularity)){
                     itvl.freeslots[mode]--;
@@ -254,7 +254,6 @@ vector<IntervalData> DPMSS(vector<Packet>& packets, int start_time, int T, int s
         score += itvl.score;
         for(Packet& pckt: itvl.packets){
             transmitNDPacket(pckt, itvl.start, itvl.end);
-
             // coding interference:
             if(pckt.packetDropFactor < packetDropFactor){
                 score -= pckt.penalty;
