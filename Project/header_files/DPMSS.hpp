@@ -23,8 +23,8 @@ public:
 
 
 // check for whether a packet can be scheduled in a given interval (intervalStart-intervalEnd)
-bool packetMatchesInterval(int intervalStart, int intervalEnd, Packet &pckt, int mode, double granularity){
-    double transmission_dur = calcTransmissionTimeMs(pckt.datasize, mode, pckt.stationId);
+bool packetMatchesInterval(int intervalStart, int intervalEnd, Packet &pckt, int mode, double granularity, Config &userconfig){
+    double transmission_dur = calcTransmissionTimeMs(pckt.datasize, mode, pckt.stationId, userconfig.mcs_range, userconfig.mcs_lowerval);
     if((pckt.arrival <= intervalStart) && ((intervalStart + transmission_dur*granularity) <= min((double)intervalEnd, pckt.deadline)) && (pckt.scheduled==false)) return true;
     return false;
 }
@@ -49,9 +49,9 @@ vector<vector<int>> selectIndicesForConfig(int itvl_start, int itvl_end, vector<
         Packet pckt = packets[ii2];
         bool assigned = false;
         for(int mode = RU_26; mode <= userconfig.maxRU; ++mode){
-            if(masterconfig[mode] == 0) break;
-            if(packetMatchesInterval(itvl_start, itvl_end, pckt, mode, granularity)){
-                if(topPackets[mode].size() < masterconfig[mode]){
+            if(userconfig.masterconfig[mode] == 0) break;
+            if(packetMatchesInterval(itvl_start, itvl_end, pckt, mode, granularity, userconfig)){
+                if(topPackets[mode].size() < userconfig.masterconfig[mode]){
                     topPackets[mode].push({pckt.penalty, ii2});
                     assigned = true;
                     break;
@@ -71,28 +71,34 @@ vector<vector<int>> selectIndicesForConfig(int itvl_start, int itvl_end, vector<
     vector<vector<int>> bestpckts(userconfig.maxRU+1);
     for(int mode = userconfig.maxRU; mode >= RU_26; --mode){
         while(!topPackets[mode].empty()){
-            bestpckts[mode].push_back(topPackets[mode].top().second); topPackets[mode].pop();
+            bestpckts[mode].push_back(topPackets[mode].top().second); 
+            topPackets[mode].pop();
         }
         reverse(bestpckts[mode].begin(), bestpckts[mode].end());
     }
     return bestpckts;
 }
 
-// The proposed heuristic algorithm
-vector<IntervalData> DPMSS(vector<Packet>& packets, int start_time, int T, int stations_count, int criticalThreshold, double granularity, double packetDropFactor, Config &userconfig){
-    const double alpha = 2;
-    vector<vector<Packet>> scheduledPackets(stations_count);
-    vector<int> availableIndices;  // to reference packets with integers
-    cout<<"DPMSS started\n";
-    for(int i = 0; i < packets.size(); ++i){
-        availableIndices.push_back(i);
-    }
+
+void createMasterConfig(Config &userconfig){
     for(int mode = RU_26; mode <= userconfig.maxRU; ++mode){
         userconfig.masterconfig[mode] = 0;
         for(int i = 0; i < (int)configs.size(); ++i){
             userconfig.masterconfig[mode] = max(userconfig.masterconfig[mode], configs[i][mode]);
         }
     }
+}
+
+
+// The proposed heuristic algorithm
+vector<IntervalData> LSDS(vector<Packet>& packets, int start_time, int T, int stations_count, int criticalThreshold, double granularity, double packetDropFactor, Config &userconfig){
+    const double alpha = 2;
+    vector<vector<Packet>> scheduledPackets(stations_count);
+    vector<int> availableIndices;  // to reference packets with integers
+    for(int i = 0; i < packets.size(); ++i){
+        availableIndices.push_back(i);
+    }
+    createMasterConfig(userconfig);
     vector<IntervalData> selectedIntervals;
     int delta = 5*granularity;
     vector<int> newAvailableIndices;
@@ -105,7 +111,7 @@ vector<IntervalData> DPMSS(vector<Packet>& packets, int start_time, int T, int s
             int intervalStart = t, intervalEnd = t+d;         // diff = d nunits
             IntervalData currInterval(intervalStart, intervalEnd);
 
-            newAvailableIndices.clear();   
+            newAvailableIndices.clear();
 
             // greedy assignment of available packets
             vector<vector<int>> bestids = selectIndicesForConfig(intervalStart, intervalEnd, availableIndices, newAvailableIndices, packets, granularity, packetDropFactor, userconfig);
@@ -114,8 +120,12 @@ vector<IntervalData> DPMSS(vector<Packet>& packets, int start_time, int T, int s
             for(int mode = userconfig.maxRU; mode >= RU_26; --mode){
                 for(int ctr = 0; ctr < prefsum[mode].size(); ++ctr){
                     int currid = bestids[mode][ctr];
-                    if(ctr == 0) prefsum[mode][ctr] = packets[currid].penalty;
-                    else prefsum[mode][ctr] = prefsum[mode][ctr-1] + packets[currid].penalty;
+                    if(ctr == 0){
+                        prefsum[mode][ctr] = packets[currid].penalty;
+                    }
+                    else{
+                        prefsum[mode][ctr] = prefsum[mode][ctr-1] + packets[currid].penalty;
+                    }
                 }
             }
             //select best configuration
@@ -170,7 +180,6 @@ vector<IntervalData> DPMSS(vector<Packet>& packets, int start_time, int T, int s
                 //choose curr interval
                 remainingIntervals.push_back(currInterval);
                 swap(selectedIntervals, remainingIntervals);
-
                 for(IntervalData& itvl: overlapIntervals){
                     for(Packet& pckt: itvl.packets){
                         newAvailableIndices.push_back(pckt.id);
@@ -195,7 +204,7 @@ vector<IntervalData> DPMSS(vector<Packet>& packets, int start_time, int T, int s
         for(IntervalData& itvl: selectedIntervals){
             for(int mode = RU_26; mode <= userconfig.maxRU; ++mode){
                 if(itvl.freeslots[mode] <= 0) continue;
-                if(packetMatchesInterval(itvl.start, itvl.end, pckt, mode, granularity)){
+                if(packetMatchesInterval(itvl.start, itvl.end, pckt, mode, granularity, userconfig)){
                     itvl.freeslots[mode]--;
                     assigned = true;
                     schedulePacket(pckt, mode, itvl.end-itvl.start);

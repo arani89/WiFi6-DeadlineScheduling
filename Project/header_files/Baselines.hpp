@@ -54,7 +54,7 @@ void baselineNLRF(vector<Packet> &packets, int start_time, int T, int stations_c
         for(auto copyconfig: configs){
             vector<int> config(copyconfig.begin(), copyconfig.end());
             int m=0;
-            for(int j = RU_26; j < userconfig.maxRU; ++j){
+            for(int j = RU_26; j <= userconfig.maxRU; ++j){
                 m += config[j];
             }
             // cout<<m<<" : ";
@@ -67,10 +67,10 @@ void baselineNLRF(vector<Packet> &packets, int start_time, int T, int stations_c
                 if(pckt.arrival > newstart) continue;
                 bool assigned = false;
                 for(int mode = RU_26; mode <= userconfig.maxRU; ++mode){
-                    if((config[mode]>0) && (calcTransmissionTimeMs(pckt.datasize, mode, pckt.stationId)+newstart <= min(pckt.deadline, (double)T - 1))){
+                    if((config[mode]>0) && (calcTransmissionTimeMs(pckt.datasize, mode, pckt.stationId, userconfig.mcs_range, userconfig.mcs_lowerval)+newstart <= min(pckt.deadline, (double)T - 1))){
                         config[mode]--;
                         assigned = true;
-                        windowsize = max(windowsize, (int)ceil(calcTransmissionTimeMs(pckt.datasize, mode, pckt.stationId)));
+                        windowsize = max(windowsize, (int)ceil(calcTransmissionTimeMs(pckt.datasize, mode, pckt.stationId, userconfig.mcs_range, userconfig.mcs_lowerval)));
                         break;
                     }
                 }
@@ -104,7 +104,7 @@ void baselineNLRF(vector<Packet> &packets, int start_time, int T, int stations_c
                 if(pckt.arrival > newstart) continue;
                 bool assigned = false;
                 for(int mode = RU_26; mode <= userconfig.maxRU; ++mode){
-                    if((cfig[mode]>0) && calcTransmissionTimeMs(pckt.datasize, mode, pckt.stationId)+newstart <= min(pckt.deadline, (double)T - 1)){
+                    if((cfig[mode]>0) && calcTransmissionTimeMs(pckt.datasize, mode, pckt.stationId, userconfig.mcs_range, userconfig.mcs_lowerval)+newstart <= min(pckt.deadline, (double)T - 1)){
                         cfig[mode]--;
                         assigned = true;
                         break;
@@ -202,10 +202,10 @@ void newBaseline(vector<Packet> &packets, int start_time, int T, int opt, int st
                 if(pckt.arrival > newstart) continue;
                 bool assigned = false;
                 for(int mode = RU_26; mode <= userconfig.maxRU; ++mode){
-                    if((config[mode]>0) && calcTransmissionTimeMs(pckt.datasize, mode, pckt.stationId)+newstart <= min(pckt.deadline, (double)T - 1)){
+                    if((config[mode]>0) && calcTransmissionTimeMs(pckt.datasize, mode, pckt.stationId, userconfig.mcs_range, userconfig.mcs_lowerval)+newstart <= min(pckt.deadline, (double)T - 1)){
                         config[mode]--;
                         assigned = true;
-                        windowsize = max(windowsize, (int)ceil(calcTransmissionTimeMs(pckt.datasize, mode, pckt.stationId)));
+                        windowsize = max(windowsize, (int)ceil(calcTransmissionTimeMs(pckt.datasize, mode, pckt.stationId, userconfig.mcs_range, userconfig.mcs_lowerval)));
                         break;
                     }
                 }

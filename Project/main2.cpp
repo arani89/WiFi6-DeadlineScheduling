@@ -40,8 +40,8 @@ int main(int argc, char **argv)
 {
     InputParser input(argc, argv);
     Config userconfig;
-    if(input.cmdOptionExists("-b")) {
-        string bandwidth = input.getCmdOption("-b");
+    if(input.cmdOptionExists("-bw")) {
+        string bandwidth = input.getCmdOption("-bw");
         const int bandwidth_val = stoi(bandwidth); 
         if (bandwidth_val == 160) {
             int config_array[] = {0, 0, 0, 0, 0, 0, 1};
@@ -65,6 +65,15 @@ int main(int argc, char **argv)
         int masterconfig_array[] ={18, 8, 4, 2, 1};
         userconfig.masterconfig.assign(masterconfig_array, masterconfig_array + 5);
     }
+    if(input.cmdOptionExists("-mcs")) {
+        string bitvalue_range = input.getCmdOption("-mcs");
+        string bitvalue_lowerval = input.getCmdOption(bitvalue_range);
+        int bitvalue_range_int = stoi(bitvalue_range);
+        int bitvalue_lowerval_int = stoi(bitvalue_lowerval);
+        cout<<bitvalue_range_int<<" "<<bitvalue_lowerval_int<<"\n";
+        userconfig.mcs_range = bitvalue_range_int;
+        userconfig.mcs_lowerval = bitvalue_lowerval_int;
+    }
     int T; cin>>T;
     int inputcase;
     cin >> inputcase;
@@ -86,7 +95,7 @@ int main(int argc, char **argv)
     cout<<"Total packets : "<< total_packets<<"\n";
     // DPMSS
     auto start = high_resolution_clock::now();
-    DPMSS(packets, 0, timeperiod, stations_count, criticalThreshold, granularity, -1, userconfig);
+    LSDS(packets, 0, timeperiod, stations_count, criticalThreshold, granularity, -1, userconfig);
     auto t1 = high_resolution_clock::now();
     // EDF
     newBaseline(packets, 0, timeperiod, EDF, stations_count, criticalThreshold, userconfig);
@@ -94,9 +103,16 @@ int main(int argc, char **argv)
     newBaseline(packets, 0, timeperiod, LRF, stations_count, criticalThreshold, userconfig);
     // NLRF
     baselineNLRF(packets, 0, timeperiod, stations_count, criticalThreshold, userconfig);
-    // configs = {{0, 0, 0, 0, 0, 0, 74}};
+    configs = {configs[configs.size()-1]};
+    for(int i=0; i<configs.size(); i++){
+        cout<<"Config "<<i<<" : ";
+        for(int j=0; j<configs[i].size(); j++){
+            cout<<configs[i][j]<<" ";
+        }
+        cout<<"\n";
+    }
     auto t2 = high_resolution_clock::now();
-    // DPMSS(packets, 0, timeperiod, stations_count, criticalThreshold, granularity, -1, userconfig);
+    LSDS(packets, 0, timeperiod, stations_count, criticalThreshold, granularity, -1, userconfig);
     auto t3 = high_resolution_clock::now();
     auto dur1 = duration_cast<microseconds>(t1 - start);
     auto dur2 = duration_cast<microseconds>(t3 - t2);

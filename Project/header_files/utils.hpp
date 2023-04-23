@@ -18,10 +18,10 @@ const vector<vector<double>> bitvalues = {
     {11.1, 22.2, 47.2, 121.9, 243.8, 510.4},
     {11.1, 22.2, 47.2, 135.4, 270.8, 576.1}};
 
-double calcTransmissionTimeMs(double size, int mode, int bitmode)
+double calcTransmissionTimeMs(double size, int mode, int bitmode, int mcs_range, int mcs_lowerval)
 {
     double bitrate;
-    bitmode = (bitmode % 1)+11;
+    bitmode = (bitmode % mcs_range)+mcs_lowerval;
     if (mode == RU_26)
         bitrate = bitvalues[bitmode][0];
     else if (mode == RU_52)
