@@ -14,7 +14,7 @@ public:
     int start; int end;
     vector<Packet> packets;
     int score;
-    IntervalData(int start, int end):start(start),end(end),score(0){
+    IntervalData(int start, int end, int size):start(start),end(end),score(0){
         freeslots.assign(7,0);
         config.assign(7,0);
     }
@@ -38,7 +38,8 @@ public:
             freeslots[RU_242]*242 + 
             freeslots[RU_106]*106 + 
             freeslots[RU_52]*52 +
-            freeslots[RU_26]*26);
+            freeslots[RU_26]*26
+        );
     }
     void printstuff(){
         int totfreeslots = 0;

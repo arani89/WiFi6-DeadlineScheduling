@@ -22,43 +22,22 @@ double calcTransmissionTimeMs(double size, int mode, int bitmode, int mcs_range,
 {
     double bitrate;
     bitmode = (bitmode % mcs_range)+mcs_lowerval;
-    if (mode == RU_26)
-        bitrate = bitvalues[bitmode][0];
-    else if (mode == RU_52)
-        bitrate = bitvalues[bitmode][1];
-    else if (mode == RU_106)
-        bitrate = bitvalues[bitmode][2];
-    else if (mode == RU_242)
-        bitrate = bitvalues[bitmode][3];
-    else if (mode == RU_484)
-        bitrate = bitvalues[bitmode][4];
-    else if (mode == RU_996)
-        bitrate = bitvalues[bitmode][5];
+    if (mode < RU_1992)
+        bitrate = bitvalues[bitmode][mode];
     else if (mode == RU_1992)
         bitrate = 2 * bitvalues[bitmode][5];
     else
         bitrate = -1;
-
     double res = (size * 8.0) / (bitrate * 1000.0);
     return res;
 }
 
-int dataTransferrableBytes(int mode, int bitmode, double timeMs)
+int dataTransferrableBytes(int mode, int bitmode, double timeMs, int mcs_range, int mcs_lowerval)
 {
     double bitrate;
-    bitmode = (bitmode % 1) + 11;
-    if (mode == RU_26)
-        bitrate = bitvalues[bitmode][0];
-    else if (mode == RU_52)
-        bitrate = bitvalues[bitmode][1];
-    else if (mode == RU_106)
-        bitrate = bitvalues[bitmode][2];
-    else if (mode == RU_242)
-        bitrate = bitvalues[bitmode][3];
-    else if (mode == RU_484)
-        bitrate = bitvalues[bitmode][4];
-    else if (mode == RU_996)
-        bitrate = bitvalues[bitmode][5];
+    bitmode = (bitmode % mcs_range) + mcs_lowerval;
+    if (mode < RU_1992)
+        bitrate = bitvalues[bitmode][mode];
     else if (mode == RU_1992)
         bitrate = 2 * bitvalues[bitmode][5];
     else

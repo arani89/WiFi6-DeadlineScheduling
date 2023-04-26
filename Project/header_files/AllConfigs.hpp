@@ -8,9 +8,7 @@ vector<vector<int>> configs;
 
 
 void createRUConfigs(int curr, Config &userconfig){
-    //Print
-    
-
+    //Print the config
     vector<int> tempfigs(userconfig.config);
     configs.push_back(tempfigs);
     //try divisions

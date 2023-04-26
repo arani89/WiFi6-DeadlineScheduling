@@ -49,8 +49,12 @@ int main(int argc, char **argv)
             userconfig.maxRU = RU_1992;
             int masterconfig_array[] = {74, 32, 16, 8, 4, 2, 1};
             userconfig.masterconfig.assign(masterconfig_array, masterconfig_array + 7); 
-        }
-        else {
+        } else if(bandwidth_val == 80){
+            int config_array[] = {0, 0, 0, 0, 0, 1};
+            userconfig.config.assign(config_array, config_array + 6);
+            userconfig.maxRU = RU_996;
+            int masterconfig_array[] = {37, 16, 8, 4, 2, 1};
+        } else {
             int config_array[] = {0, 0, 0, 0, 1};
             userconfig.config.assign(config_array, config_array + 5); 
             userconfig.maxRU = RU_484;
@@ -70,9 +74,11 @@ int main(int argc, char **argv)
         string bitvalue_lowerval = input.getCmdOption(bitvalue_range);
         int bitvalue_range_int = stoi(bitvalue_range);
         int bitvalue_lowerval_int = stoi(bitvalue_lowerval);
-        cout<<bitvalue_range_int<<" "<<bitvalue_lowerval_int<<"\n";
         userconfig.mcs_range = bitvalue_range_int;
         userconfig.mcs_lowerval = bitvalue_lowerval_int;
+    }
+    if(input.cmdOptionExists("-poissonBw")) {
+        int pbw = stoi(input.getCmdOption("-poissonBw"));
     }
     int T; cin>>T;
     int inputcase;
@@ -104,13 +110,7 @@ int main(int argc, char **argv)
     // NLRF
     baselineNLRF(packets, 0, timeperiod, stations_count, criticalThreshold, userconfig);
     configs = {configs[configs.size()-1]};
-    for(int i=0; i<configs.size(); i++){
-        cout<<"Config "<<i<<" : ";
-        for(int j=0; j<configs[i].size(); j++){
-            cout<<configs[i][j]<<" ";
-        }
-        cout<<"\n";
-    }
+    userconfig.maxRU = RU_26;
     auto t2 = high_resolution_clock::now();
     LSDS(packets, 0, timeperiod, stations_count, criticalThreshold, granularity, -1, userconfig);
     auto t3 = high_resolution_clock::now();

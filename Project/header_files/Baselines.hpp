@@ -191,8 +191,8 @@ void newBaseline(vector<Packet> &packets, int start_time, int T, int opt, int st
             int tempTotalAssigned = 0;
             int tempCriticalAssigned = 0;
             int m=0;
-            for(int mode = userconfig.maxRU; mode >= RU_26; --mode){
-                m += config[mode];
+            for(int j = userconfig.maxRU; j >= RU_26; --j){
+                m += config[j];
             }
             int windowsize = 0;
             int curscore = 0;
@@ -241,19 +241,19 @@ void newBaseline(vector<Packet> &packets, int start_time, int T, int opt, int st
         // -----
         if(cfig.size() == 0) ++i;
         else {
-            for(int mode = userconfig.maxRU; mode >= RU_26; --mode){
-                i += cfig[mode];
+            for(int j = userconfig.maxRU; j >= RU_26; --j){
+                i += cfig[j];
             }
         }
     }
     //output
     if(opt == EDF){
-        cout<<"New EDF Score, total dropped, critical dropped: \n";
+        cout<<"EDF Score, total dropped, critical dropped: \n";
         cout<<score<<" ";
         cout<<totalDropped<<" ";
         cout<<criticalDropped<<"\n";
     } else if(opt == LRF){
-        cout<<"New LRF Score, total dropped, critical dropped: \n";
+        cout<<"LRF Score, total dropped, critical dropped: \n";
         cout<<score<<" ";
         cout<<totalDropped<<" ";
         cout<<criticalDropped<<"\n";

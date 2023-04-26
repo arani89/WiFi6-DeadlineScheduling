@@ -37,7 +37,7 @@ int packets_scheduled1 = 0;
 int totalnoncritical = 0;
 int critical_packets_scheduled = 0;
 int noncritical_packets_scheduled = 0;
-void fitPacketsToEmptySpaces(vector<IntervalData> &itvl_data, vector<Packet> &packets1, vector<Packet> &packets2, int start_time, int end_time)
+void fitPacketsToEmptySpaces(vector<IntervalData> &itvl_data, vector<Packet> &packets1, vector<Packet> &packets2, int start_time, int end_time, Config &userconfig)
 {
     int p1len = packets1.size();
     int p2len = packets2.size();
@@ -53,7 +53,7 @@ void fitPacketsToEmptySpaces(vector<IntervalData> &itvl_data, vector<Packet> &pa
 
             // Schedule packets1 before packets 2 (FCFS)
             Packet &pckt = (idx1 < p1len)? packets1[idx1] : packets2[idx2];
-            double reqtime = calcTransmissionTimeMs(pckt.datasize, RU_996, pckt.stationId);
+            double reqtime = calcTransmissionTimeMs(pckt.datasize, RU_996, pckt.stationId, userconfig.mcs_range, userconfig.mcs_lowerval);
             if(start+reqtime <= end){
                 //schedule it
                 schedulePacket(pckt, RU_996, reqtime);
@@ -66,7 +66,7 @@ void fitPacketsToEmptySpaces(vector<IntervalData> &itvl_data, vector<Packet> &pa
                 else idx2++;
             } else {
                 //fragment and schedule it
-                int dataTransferrable = dataTransferrableBytes(RU_996, pckt.stationId, (end-start)/granularity);
+                int dataTransferrable = dataTransferrableBytes(RU_996, pckt.stationId, (end-start)/granularity, userconfig.mcs_range, userconfig.mcs_lowerval);
                 if(dataTransferrable >= pckt.datasize){
                     cout<<"Error, packet can be scheduled but hasn't been."; exit(EXIT_FAILURE);
                 }
@@ -95,7 +95,7 @@ void fitPacketsToEmptySpaces(vector<IntervalData> &itvl_data, vector<Packet> &pa
     swap(packets1, newpckts1);
     swap(packets2, newpckts2);
 }
-void fitPacketsToFreeRUs(vector<IntervalData> &itvl_data, vector<Packet> &packets, double packetDropFactor)
+void fitPacketsToFreeRUs(vector<IntervalData> &itvl_data, vector<Packet> &packets, double packetDropFactor, Config &userconfig)
 {
     int plen = packets.size();
     int currentp = 0;
@@ -109,7 +109,7 @@ void fitPacketsToFreeRUs(vector<IntervalData> &itvl_data, vector<Packet> &packet
         {
             if (itvl.freeslots[mode] <= 0)
                 continue;
-            if (packetMatchesInterval(itvl.start, itvl.end, pckt, mode, granularity))
+            if (packetMatchesInterval(itvl.start, itvl.end, pckt, mode, granularity, userconfig))
             {
                 itvl.freeslots[mode]--;
                 assigned = true;
@@ -132,14 +132,58 @@ void fitPacketsToFreeRUs(vector<IntervalData> &itvl_data, vector<Packet> &packet
     swap(packets, newpckts);
 }
 
-int main()
+int main(int argc, char **argv)
 {
+    InputParser input(argc, argv);
+    Config userconfig;
+    if(input.cmdOptionExists("-bw")) {
+        string bandwidth = input.getCmdOption("-bw");
+        const int bandwidth_val = stoi(bandwidth); 
+        if (bandwidth_val == 160) {
+            int config_array[] = {0, 0, 0, 0, 0, 0, 1};
+            userconfig.config.assign(config_array, config_array + 7); 
+            userconfig.maxRU = RU_1992;
+            int masterconfig_array[] = {74, 32, 16, 8, 4, 2, 1};
+            userconfig.masterconfig.assign(masterconfig_array, masterconfig_array + 7); 
+        } else if(bandwidth_val == 80){
+            int config_array[] = {0, 0, 0, 0, 0, 1};
+            userconfig.config.assign(config_array, config_array + 6);
+            userconfig.maxRU = RU_996;
+            int masterconfig_array[] = {37, 16, 8, 4, 2, 1};
+        } else {
+            int config_array[] = {0, 0, 0, 0, 1};
+            userconfig.config.assign(config_array, config_array + 5); 
+            userconfig.maxRU = RU_484;
+            int masterconfig_array[] ={18, 8, 4, 2, 1};
+            userconfig.masterconfig.assign(masterconfig_array, masterconfig_array + 5);
+        }
+    }
+    else {
+        int config_array[] = {0, 0, 0, 0, 1};
+        userconfig.config.assign(config_array, config_array + 5); 
+        userconfig.maxRU = RU_484;
+        int masterconfig_array[] ={18, 8, 4, 2, 1};
+        userconfig.masterconfig.assign(masterconfig_array, masterconfig_array + 5);
+    }
+    if(input.cmdOptionExists("-mcs")) {
+        string bitvalue_range = input.getCmdOption("-mcs");
+        string bitvalue_lowerval = input.getCmdOption(bitvalue_range);
+        int bitvalue_range_int = stoi(bitvalue_range);
+        int bitvalue_lowerval_int = stoi(bitvalue_lowerval);
+        userconfig.mcs_range = bitvalue_range_int;
+        userconfig.mcs_lowerval = bitvalue_lowerval_int;
+    }
+    if(input.cmdOptionExists("-ndp_ol")) {
+        int ndp_ol = stoi(input.getCmdOption("-ndp_ol"));
+        userconfig.ndp_ol = ndp_ol;
+    }
+    
     int T; cin>>T;
     int inputcase;
     cin >> inputcase;
-    vector<int> config = {1, 0, 0, 0, 0, 0};
+    // vector<int> config = {1, 0, 0, 0, 0, 0};
     int random_frequency = random(0, 3);
-    createRUConfigs(0, config);
+    createRUConfigs(userconfig.maxRU, userconfig);
     int totalProfit = 0;
     cout<<((int)configs.size())<<"\n";
     // for (int i = 0; i<configs.size(); i++){
@@ -200,7 +244,7 @@ int main()
 
         nonDeterministicPackets stores the ndp coming per round
    */
-    // vector<vector<Packet>> nonDeterministicPackets(n_rounds);
+    vector<vector<Packet>> nonDeterministicPackets(n_rounds);
     for (int roundNo = 0; roundNo < n_rounds; roundNo++)
     {
         cout<<roundNo<<" round:\n============\n";
@@ -217,29 +261,29 @@ int main()
         }
 
         // profit increases with each subsequent round for ndp packets
-        // for(Packet& pckt: currentPackets) 
-        //     pckt.updateNDPacket(criticalThreshold);
-
+        for(Packet& pckt: currentPackets) 
+            pckt.updateNDPacket(criticalThreshold);
         // Create the current deterministic batch
+
         stations_count = createBatch(currentPackets, start_time, timeperiod, inputcase, producers, criticalThreshold);
-        
+
         cout<<"Batch created\n";
 
-        // if (roundNo - 2 >= 0)
-        // {
-        //     for(Packet& pckt: nonDeterministicPackets[roundNo-2]){
-        //         pckt.setNDP();
-        //     }
-        //     currentPackets.insert(currentPackets.end(),
-        //                           nonDeterministicPackets[roundNo - 2].begin(),
-        //                           nonDeterministicPackets[roundNo - 2].end());
-        // }
+        if (roundNo - 2 >= 0)
+        {
+            for(Packet& pckt: nonDeterministicPackets[roundNo-2]){
+                pckt.setNDP();
+            }
+            currentPackets.insert(currentPackets.end(),
+                                  nonDeterministicPackets[roundNo - 2].begin(),
+                                  nonDeterministicPackets[roundNo - 2].end());
+        }
         // running the algorithm
         for(int ii = 0; ii < (int)currentPackets.size(); ii++){
             currentPackets[ii].id = ii;
         }
-        vector<IntervalData> intervalData = DPMSS(currentPackets, start_time, timeperiod, stations_count, criticalThreshold, granularity, packetDropFactor);
-        cout<<"DPMSS algo executed\n";
+        vector<IntervalData> intervalData = LSDS(currentPackets, start_time, timeperiod, stations_count, criticalThreshold, granularity, packetDropFactor, userconfig);
+        cout<<"LSDS algo executed\n";
         for(auto &itvl: intervalData){
             packets_scheduled2+=itvl.packets.size();
             for(auto &pckt: itvl.packets){
@@ -258,41 +302,41 @@ int main()
             }
         }
         //ndp packets are generated here
-        // createNDP(nonDeterministicPackets[roundNo], start_time, timeperiod);
+        createNDP(nonDeterministicPackets[roundNo], start_time, timeperiod, userconfig.ndp_ol);
 
         // Allocating to free RUs
-        // if (roundNo - 1 >= 0)
-        // {
-        //     fitPacketsToFreeRUs(intervalData, nonDeterministicPackets[roundNo - 1], packetDropFactor);
-        // }
-        // fitPacketsToFreeRUs(intervalData, nonDeterministicPackets[roundNo], packetDropFactor);
+        if (roundNo - 1 >= 0)
+        {
+            fitPacketsToFreeRUs(intervalData, nonDeterministicPackets[roundNo - 1], packetDropFactor, userconfig);
+        }
+        fitPacketsToFreeRUs(intervalData, nonDeterministicPackets[roundNo], packetDropFactor, userconfig);
 
         // Allocating to spaces with no intervals
-        // if(roundNo-1 < 0){
-        //     vector<Packet> noPackets;
-        //     fitPacketsToEmptySpaces(intervalData, noPackets, nonDeterministicPackets[roundNo], start_time, start_time + timeperiod);
-        // } else {
-        //     fitPacketsToEmptySpaces(intervalData, nonDeterministicPackets[roundNo - 1], nonDeterministicPackets[roundNo], 
-        //         start_time, start_time + timeperiod);
-        // }
+        if(roundNo-1 < 0){
+            vector<Packet> noPackets;
+            fitPacketsToEmptySpaces(intervalData, noPackets, nonDeterministicPackets[roundNo], start_time, start_time + timeperiod, userconfig);
+        } else {
+            fitPacketsToEmptySpaces(intervalData, nonDeterministicPackets[roundNo - 1], nonDeterministicPackets[roundNo], 
+                start_time, start_time + timeperiod, userconfig);
+        }
         for(auto &interval_data: intervalData){
             totalProfit += interval_data.score;
         }
         cout<<"Allocated to free RUs and empty spaces\n";
     }
     cout<<"\n==========end of round simulation============\n";
-    totalnoncritical = total_packets - totalcritical;
-    cout<<ndp_first_bit<<" "<<ndp_last_bit<<" "<<ndp_data_transferred<<"\n";
-    cout<<"Packets scheduled: "<<packets_scheduled2+packets_scheduled1<<"\n";
-    cout<<"Packets dropped: "<<total_packets - (packets_scheduled1+packets_scheduled2)<<"\n";
-    cout<<"Total packets: "<<total_packets<<"\n";
-    cout<<"%age Critical packets dropped: "<<(((double)totalcritical - (double)critical_packets_scheduled)/totalcritical)*100<<"\n";
-    cout<<"%age Non critical packets dropped: "<<(((double)totalnoncritical - (double)noncritical_packets_scheduled)/totalnoncritical)*100<<"\n";
-    cout<<"Percentage of packets dropped: "<<(((double)total_packets - (double)(packets_scheduled1+packets_scheduled2))/total_packets)*100<<"\n";
-    cout<<"Total profit: "<<totalProfit<<"\n";
-// cout<<"NDP throughput: "<<((double)(ndp_data_transferred*8)/((n_rounds*timeperiod)*1000))*granularity<<" Mb/s\n";
-    // cout<<"Transmission time given to NDP: "<<ndp_transmission_time<<" nunits\n";
-    // cout<<"Resource (Tonnes) given to NDP: "<<ndp_resource_allocated<<"\n";
+    // totalnoncritical = total_packets - totalcritical;
+    // cout<<ndp_first_bit<<" "<<ndp_last_bit<<" "<<ndp_data_transferred<<"\n";
+    // cout<<"Packets scheduled: "<<packets_scheduled2+packets_scheduled1<<"\n";
+    // cout<<"Packets dropped: "<<total_packets - (packets_scheduled1+packets_scheduled2)<<"\n";
+    // cout<<"Total packets: "<<total_packets<<"\n";
+    // cout<<"%age Critical packets dropped: "<<(((double)totalcritical - (double)critical_packets_scheduled)/totalcritical)*100<<"\n";
+    // cout<<"%age Non critical packets dropped: "<<(((double)totalnoncritical - (double)noncritical_packets_scheduled)/totalnoncritical)*100<<"\n";
+    // cout<<"Percentage of packets dropped: "<<(((double)total_packets - (double)(packets_scheduled1+packets_scheduled2))/total_packets)*100<<"\n";
+    // cout<<"Total profit: "<<totalProfit<<"\n";
+    cout<<"NDP throughput: "<<((double)(ndp_data_transferred*8*1000)/((n_rounds*timeperiod)*1024*1024))*granularity<<" Mb/s\n";
+    cout<<"Transmission time given to NDP: "<<ndp_transmission_time<<" nunits\n";
+    cout<<"Resource (Tonnes) given to NDP: "<<ndp_resource_allocated<<"\n";
 }
 
 /*

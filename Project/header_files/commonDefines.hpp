@@ -48,4 +48,5 @@ class Config {
         int mcs_range = 1;
         int mcs_lowerval = 11;
         bool variableMCS = false;
+        int ndp_ol = 0;
 };

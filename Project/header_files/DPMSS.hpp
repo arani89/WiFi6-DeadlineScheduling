@@ -33,7 +33,7 @@ bool packetMatchesInterval(int intervalStart, int intervalEnd, Packet &pckt, int
 // -------------- Heuristic Algorithm -----------------------
 // ----------------------------------------------------------
 
-vector<int> masterconfig = {1,2,4,8,16,32,74}; // max of all possible RU configruations
+// vector<int> masterconfig = {1,2,4,8,16,32,74}; // max of all possible RU configruations
 int total_critical_packets = 0;
 /*********************************
 Given interval timestamps and the current available packets, figure out best packets for the master
@@ -99,6 +99,9 @@ vector<IntervalData> LSDS(vector<Packet>& packets, int start_time, int T, int st
         availableIndices.push_back(i);
     }
     createMasterConfig(userconfig);
+    for(int i=0; i<userconfig.masterconfig.size(); ++i){
+        cout<<userconfig.masterconfig[i]<<" ";
+    }
     vector<IntervalData> selectedIntervals;
     int delta = 5*granularity;
     vector<int> newAvailableIndices;
@@ -109,7 +112,7 @@ vector<IntervalData> LSDS(vector<Packet>& packets, int start_time, int T, int st
             int prevscore = -1;
             // Interval Data creation
             int intervalStart = t, intervalEnd = t+d;         // diff = d nunits
-            IntervalData currInterval(intervalStart, intervalEnd);
+            IntervalData currInterval(intervalStart, intervalEnd, userconfig.maxRU+1);
 
             newAvailableIndices.clear();
 
@@ -129,7 +132,8 @@ vector<IntervalData> LSDS(vector<Packet>& packets, int start_time, int T, int st
                 }
             }
             //select best configuration
-            vector<int> bestconfig; int cfgscore = -1;
+            vector<int> bestconfig;
+            int cfgscore = -1;
             for(vector<int>& config: configs){
                 //calc score
                 int curscore = 0;
@@ -243,7 +247,7 @@ vector<IntervalData> LSDS(vector<Packet>& packets, int start_time, int T, int st
 		return i1.start < i2.start;
 	});
 
-    cout<<"Heuristic Score, total dropped, critical dropped:\n";
+    cout<<"LSDS Score, total dropped, critical dropped:\n";
     cout<<score<<" ";
     cout<<totalDropped<<" ";
     cout<<criticalDropped<<"\n";
