@@ -32,7 +32,7 @@ double calcTransmissionTimeMs(double size, int mode, int bitmode, int mcs_range,
     return res;
 }
 
-int dataTransferrableBytes(int mode, int bitmode, double timeMs, int mcs_range, int mcs_lowerval)
+double dataTransferrableBytes(int mode, int bitmode, double timeMs, int mcs_range, int mcs_lowerval)
 {
     double bitrate;
     bitmode = (bitmode % mcs_range) + mcs_lowerval;
@@ -43,7 +43,6 @@ int dataTransferrableBytes(int mode, int bitmode, double timeMs, int mcs_range, 
     else
         bitrate = -1;
 
-    double size = ((bitrate * 1000.0) * timeMs) / 8.0;
-    int sz = (int)size;
-    return sz;
+    double size = ((double)(bitrate * (1024*1024)) * timeMs) / (8.0*1000);
+    return size;
 }

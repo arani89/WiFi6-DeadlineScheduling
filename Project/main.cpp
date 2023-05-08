@@ -31,7 +31,7 @@ double granularity = 1; // (1/granularity)ms gives the smallest unit of time con
 int stations_count = 0;
 int criticalThreshold;
 bool printdetails = 0;
-int n_rounds = 2; // number of rounds
+int n_rounds = 6; // number of rounds
 int packets_scheduled2 = 0;
 int packets_scheduled1 = 0;
 int totalnoncritical = 0;
@@ -53,10 +53,10 @@ void fitPacketsToEmptySpaces(vector<IntervalData> &itvl_data, vector<Packet> &pa
 
             // Schedule packets1 before packets 2 (FCFS)
             Packet &pckt = (idx1 < p1len)? packets1[idx1] : packets2[idx2];
-            double reqtime = calcTransmissionTimeMs(pckt.datasize, RU_996, pckt.stationId, userconfig.mcs_range, userconfig.mcs_lowerval);
+            double reqtime = calcTransmissionTimeMs(pckt.datasize, userconfig.maxRU, pckt.stationId, userconfig.mcs_range, userconfig.mcs_lowerval);
             if(start+reqtime <= end){
                 //schedule it
-                schedulePacket(pckt, RU_996, reqtime);
+                schedulePacket(pckt, userconfig.maxRU, reqtime);
                 packets_scheduled1++;
                 pckt.setNDP();   // could have done this someplace better.
                 transmitNDPacket(pckt, start, start+reqtime);
@@ -66,15 +66,15 @@ void fitPacketsToEmptySpaces(vector<IntervalData> &itvl_data, vector<Packet> &pa
                 else idx2++;
             } else {
                 //fragment and schedule it
-                int dataTransferrable = dataTransferrableBytes(RU_996, pckt.stationId, (end-start)/granularity, userconfig.mcs_range, userconfig.mcs_lowerval);
+                double dataTransferrable = dataTransferrableBytes(userconfig.maxRU, pckt.stationId, (end-start)/granularity, userconfig.mcs_range, userconfig.mcs_lowerval);
                 if(dataTransferrable >= pckt.datasize){
                     cout<<"Error, packet can be scheduled but hasn't been."; exit(EXIT_FAILURE);
                 }
-                if(dataTransferrable > 0){
-                    schedulePacket(pckt, RU_996, end-start);
+                if((int)dataTransferrable > 0){
+                    schedulePacket(pckt, userconfig.maxRU, end-start);
                     packets_scheduled1++;
                     pckt.setNDP();
-                    int tempdatasize = pckt.datasize - dataTransferrable; 
+                    double tempdatasize = pckt.datasize - dataTransferrable; 
                     pckt.datasize = dataTransferrable;
                     transmitNDPacket(pckt, start, end);
                     pckt.datasize = tempdatasize;
@@ -105,7 +105,7 @@ void fitPacketsToFreeRUs(vector<IntervalData> &itvl_data, vector<Packet> &packet
         Packet &pckt = packets[currentp];
         // try to assign this packet
         bool assigned = false;
-        for (int mode = RU_26; mode >= RU_996; --mode)
+        for (int mode = RU_26; mode <= userconfig.maxRU; ++mode)
         {
             if (itvl.freeslots[mode] <= 0)
                 continue;
@@ -174,7 +174,7 @@ int main(int argc, char **argv)
         userconfig.mcs_lowerval = bitvalue_lowerval_int;
     }
     if(input.cmdOptionExists("-ndp_ol")) {
-        int ndp_ol = stoi(input.getCmdOption("-ndp_ol"));
+        double ndp_ol = stoi(input.getCmdOption("-ndp_ol"));
         userconfig.ndp_ol = ndp_ol;
     }
     
@@ -302,7 +302,7 @@ int main(int argc, char **argv)
             }
         }
         //ndp packets are generated here
-        createNDP(nonDeterministicPackets[roundNo], start_time, timeperiod, userconfig.ndp_ol);
+        createNDP(nonDeterministicPackets[roundNo], start_time, timeperiod, granularity, userconfig.ndp_ol);
 
         // Allocating to free RUs
         if (roundNo - 1 >= 0)
@@ -334,13 +334,11 @@ int main(int argc, char **argv)
     // cout<<"%age Non critical packets dropped: "<<(((double)totalnoncritical - (double)noncritical_packets_scheduled)/totalnoncritical)*100<<"\n";
     // cout<<"Percentage of packets dropped: "<<(((double)total_packets - (double)(packets_scheduled1+packets_scheduled2))/total_packets)*100<<"\n";
     // cout<<"Total profit: "<<totalProfit<<"\n";
-    cout<<"NDP throughput: "<<((double)(ndp_data_transferred*8*1000)/((n_rounds*timeperiod)*1024*1024))*granularity<<" Mb/s\n";
+    cout<<n_rounds<<" "<<timeperiod<<endl;
+    cout<<"NDP throughput: "<<((double)((ndp_data_transferred-9000)*8*1000)/((n_rounds*(timeperiod/granularity))*1024*1024))<<" Mb/s\n";
     cout<<"Transmission time given to NDP: "<<ndp_transmission_time<<" nunits\n";
     cout<<"Resource (Tonnes) given to NDP: "<<ndp_resource_allocated<<"\n";
 }
-
 /*
 Input:
-
-
 */

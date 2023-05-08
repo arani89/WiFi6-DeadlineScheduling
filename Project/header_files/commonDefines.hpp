@@ -9,7 +9,7 @@ inline const int RU_106 = 2;
 inline const int RU_52 = 1;
 inline const int  RU_26 = 0;
 
-inline int ndp_data_transferred = 0;
+inline double ndp_data_transferred = 0;
 inline double ndp_transmission_time = 0;
 inline int ndp_resource_allocated = 0;
 
@@ -48,5 +48,5 @@ class Config {
         int mcs_range = 1;
         int mcs_lowerval = 11;
         bool variableMCS = false;
-        int ndp_ol = 0;
+        double ndp_ol = 0;
 };

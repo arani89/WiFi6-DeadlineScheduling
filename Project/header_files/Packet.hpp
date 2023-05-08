@@ -11,7 +11,8 @@
 */
 class Packet{
     public:
-    int penalty, stationId, id, datasize;
+    int penalty, stationId, id;
+    double datasize;
     double arrival;
     double deadline;
     double packetDropFactor;
@@ -21,14 +22,15 @@ class Packet{
 
 	// default constructor
     Packet(){
-        datasize = penalty = stationId = -1;
+        penalty = stationId = -1;
+        datasize = -1;
         deadline = arrival = -1;
         id = 0; ndp = false;
         scheduled = false;
         mode = -1; timeAssigned = -1;
     }
 	// initialize penalty, arrival, datasize, deadline, stationId, unique id
-    Packet(int penalty, double arrival, int datasize, double deadline, int stationId, int id, double packetDropFactor){
+    Packet(int penalty, double arrival, double datasize, double deadline, int stationId, int id, double packetDropFactor){
         this->penalty = penalty;
         this->arrival = arrival;
         this->datasize = datasize;

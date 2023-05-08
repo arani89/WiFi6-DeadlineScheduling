@@ -181,7 +181,7 @@ int usecase3Input(int T, vector<Packet>& packets, int start_time, vector<vector<
     return n_stations;
 }
 
-int ndpPacketGenerator(int timeperiod, vector<Packet> &currentNdpPackets, int start_time, int offeredLoad){
+int ndpPacketGenerator(int timeperiod, vector<Packet> &currentNdpPackets, int start_time, int granularity, int offeredLoad){
     int stations = 3;
     int nodes = 1;
     // (1/granularity)ms = 1 nunit
@@ -194,30 +194,33 @@ int ndpPacketGenerator(int timeperiod, vector<Packet> &currentNdpPackets, int st
     // std::uniform_int_distribution<int> intdist(200,1500); // random number gen between 200 and 1500
     int n_stations = 0; // count of stations
     vector<Packet> newNdpPackets(0);
-    double offered_load = (offeredLoad*1024*1024)/(1000*stations);
-    int datasize = 1500;
-    int total_size=0;
+    double offered_load = (((double)offeredLoad*1024*1024))/(1000*stations*granularity);
+    double datasize = 1500.0;
+    double total_size=0;
+    cout<<"offered load: "<<offered_load<<endl;
     for(int st = 0; st < stations; st++){
-        double sumArrivalTimes=0;
-        double newArrivalTime;
-        double Tp = ((double)datasize*(8.0)*granularity)/((double)offered_load);
-        // cout<<"time period: "<<Tp<<endl;
-        while(sumArrivalTimes < timeperiod){
-            // newArrivalTime =  exp.operator() (rang);// generates the next random number in the distribution 
-            sumArrivalTimes  = sumArrivalTimes + Tp;
-            for(int i = 0; i < nodes; i++){
-                // int datasize = 1500; // between 200 and 1500 bytes
-                Packet pckt(ndpProfit, sumArrivalTimes+start_time, datasize, sumArrivalTimes+ndpDelay+start_time, n_stations+i, universalCounter++, 1);
-                total_size+=datasize;
-                if(pckt.penalty >= critical_threshold){
-                    totalcritical++;
+        if(offered_load > 0){
+            double sumArrivalTimes=0;
+            double newArrivalTime;
+            double Tp = ((double)datasize*(8.0))/((double)offered_load);
+            // cout<<"time period: "<<Tp<<endl;
+            while(sumArrivalTimes < timeperiod){
+                // newArrivalTime =  exp.operator() (rang);// generates the next random number in the distribution 
+                sumArrivalTimes  = sumArrivalTimes + Tp;
+                for(int i = 0; i < nodes; i++){
+                    // int datasize = 1500; // between 200 and 1500 bytes
+                    Packet pckt(ndpProfit, sumArrivalTimes+start_time, datasize, sumArrivalTimes+ndpDelay+start_time, n_stations+i, universalCounter++, 1);
+                    total_size+=datasize;
+                    if(pckt.penalty >= critical_threshold){
+                        totalcritical++;
+                    }
+                    newNdpPackets.push_back(pckt);
+                    total_packets++;
                 }
-                newNdpPackets.push_back(pckt);
-                total_packets++;
+                // j += (int)pcktnodes.size();
             }
-            // j += (int)pcktnodes.size();
+            n_stations += nodes;
         }
-        n_stations += nodes;
     }
     // cout<<"total ndp size:"<<(double)total_size/(1024*1024)<<endl;
     sort(newNdpPackets.begin(), newNdpPackets.end(), [](Packet& p1, Packet& p2){
@@ -270,8 +273,8 @@ int ndpPacketGenerator(int timeperiod, vector<Packet> &currentNdpPackets, int st
     // return n_stations;
 }
 
-void createNDP(vector<Packet> &currentNdpPackets, int start_time, int timeperiod, int offeredLoad){
-    ndpPacketGenerator(timeperiod, currentNdpPackets, start_time, offeredLoad);
+void createNDP(vector<Packet> &currentNdpPackets, int start_time, int timeperiod, int granularity, int offeredLoad){
+    ndpPacketGenerator(timeperiod, currentNdpPackets, start_time, granularity, offeredLoad);
 }
 
 int createBatch(vector<Packet> &currentPackets, int start_time, int timeperiod, int input_type, vector<vector<double>> &producers, int criticalThreshold){
