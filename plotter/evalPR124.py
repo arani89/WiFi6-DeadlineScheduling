@@ -44,10 +44,11 @@ error = [lsds_std, lsdsf_std, lrf_std, nlrf_std, edf_std]
 
 fig, ax = plt.subplots()
 # change the bar color to be less bright blue
-ax.bar(x_pos, CTEs, yerr=error, align='center', color='#1C7ED6', alpha=1, ecolor='#495057', capsize=10)
+ax.bar(x_pos, CTEs, yerr=error, align='center',
+       color='#1C7ED6', alpha=1, ecolor='#495057', capsize=10)
 # ax.bar(x_pos, CTEs, align='center', color='#1C7ED6', alpha=1)
 ax.set_ylabel('Profit Achieved/Profit Possible')
-ax.set_ybound(0,1)
+ax.set_ybound(0, 1)
 ax.set_xticks(x_pos)
 ax.set_xticklabels(materials)
 ax.yaxis.grid(True)
