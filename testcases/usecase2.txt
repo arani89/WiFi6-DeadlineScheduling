@@ -11,4 +11,3 @@ The first line contains the number of test cases, T and defines the test case nu
 The second line contains the timeperiod, granularity and critical threshold.
 The third line contains the number of stations(stations).
 The corresponding station number of lines contain mean Arrival rate, number of packets, request 1 and 2, size, delay, penalty, nodes(usecase 2)
-7.4509241+6.68907588

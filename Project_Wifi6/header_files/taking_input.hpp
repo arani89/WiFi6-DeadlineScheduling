@@ -201,7 +201,7 @@ int ndpPacketGenerator(int timeperiod, vector<Packet> &currentNdpPackets, int st
     double offered_load = (((double)offeredLoad*1024*1024))/(1000*stations*granularity);
     double datasize = 1500.0;
     double total_size=0;
-    cout<<"offered load: "<<offered_load<<endl;
+    // cout<<"offered load: "<<offered_load<<endl;
     for(int st = 0; st < stations; st++){
         if(offered_load > 0){
             double sumArrivalTimes=0;

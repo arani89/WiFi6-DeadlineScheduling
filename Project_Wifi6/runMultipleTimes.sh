@@ -2,10 +2,10 @@
 
 # Loop 100 times
 # echo "" >> ./outputUC4100.txt
-for i in {1..100}
+# define an array with elements {22 11 16 16 29 16 23 20 14 21 16 26 26 20 19 16 24 24 18 23 12 15 18 23 25 21 22 21 27 20 21 14 15 29 26 14 24 27 26 22 23 22 16 15 23 23 18 16 16 16 14 22 11 21 16 24 29 17 17 14 22 22 22 19 23 14 17 23 26 25 18 26 24 26 19 23 14 16 16 23 19 28 19 24 20 24 16 15 15 13 16 26 30 23 23 19 20 18 32 20}
+
+declare -a arr=(85  96  84  77  79  89  82  80  83  73  80  64 108  83  80  76  86  81 67  79  82  80  77  71  79  65  79  72  74  81  72  79  70  97  79  85 73  91  85  85  80  78  86  76  73  85  72  62  84  75  80  82  75  80 92  74  82  68  81  78  80  88  79  80  69  77  79  85  82  77  74  83 77  82  72  80  81  84  60  75  88  79  92  75  79  69  76  79  89  74 70  85  81  81  80  86  83  72  85  85)
+for i in "${arr[@]}"
 do
-  # Run your program here
-#   push a newline to the output file
-    ./main2.exe -bw 160 < ../testcases/usecase4.txt >> ../plotter/outputUC4100.txt
-    # echo "" >> ../plotter/outputUC4100.txt
+    ./main.exe -bw 160 -ndp_ol $i < ../testcases/usecase4.txt >> ../plotter/outputUC4_satisfactionRatio.txt
 done
