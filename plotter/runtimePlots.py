@@ -3,9 +3,9 @@ import numpy as np
 
 plt.rcParams.update({'font.size': 15})
 
-runtimeFromRpi = [353, 23, 18, 2512, 10]
-runtimeFromPc = [73, 5, 2, 498, 2]
-runtimeFromServer = [126, 9, 10, 2412, 9]
+runtimeFromRpi = [1135, 174, 112, 4242, 237]
+runtimeFromPc = [424, 43, 24, 1201, 66]
+runtimeFromServer = [49, 5, 3, 184, 8]
 
 # create plot where the x axis is rpi, PC and server and the y axis is the runtime in seconds for each use case and the ftc
 # the x axis is the use case number and the y axis is the runtime in seconds
@@ -24,7 +24,7 @@ plt.xticks(x, ('Use\nCase-1', 'Use\nCase-2', 'Use\nCase-3', 'Use\nCase-4', 'Use\
 plt.xlabel('Use case')
 plt.ylabel('Runtime in (millisec)')
 plt.legend(['Realtime(200ms)','Raspberry Pi', 'PC', 'Server'])
-plt.savefig('runtimePlots.pdf', bbox_inches='tight')
+plt.savefig('runtimePlots_2.pdf', bbox_inches='tight')
 plt.show()
 
 
