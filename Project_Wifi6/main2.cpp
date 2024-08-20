@@ -124,11 +124,11 @@ int main(int argc, char **argv)
     // cout<<"Max profit : "<<maxScorePossible<<"\n";
     // cout<<"Total packets : "<< total_packets<<"\n";
     // DPMSS
-    auto start = high_resolution_clock::now();
-    LSDS(packets, 0, timeperiod, stations_count, criticalThreshold, granularity, 0, userconfig, maxScorePossible, 0, 0);
-    LSDS(packets, 0, timeperiod, stations_count, criticalThreshold, granularity, 0, userconfig, maxScorePossible, 0, 1);
-    cout << '\n';
-    auto t1 = high_resolution_clock::now();
+    //auto start = high_resolution_clock::now();
+    //LSDS(packets, 0, timeperiod, stations_count, criticalThreshold, granularity, 0, userconfig, maxScorePossible, 0, 0);
+    //LSDS(packets, 0, timeperiod, stations_count, criticalThreshold, granularity, 0, userconfig, maxScorePossible, 0, 1);
+    //cout << '\n';
+    //auto t1 = high_resolution_clock::now();
     // EDF
     // newBaseline(packets, 0, timeperiod, EDF, stations_count, criticalThreshold, packetDropFactor, userconfig, maxScorePossible);
     // // LRF
@@ -138,7 +138,7 @@ int main(int argc, char **argv)
     // configs = {configs[configs.size()-1]};
     // userconfig.maxRU = RU_26;
     // auto t2 = high_resolution_clock::now();
-    // LSDS(packets, 0, timeperiod, stations_count, criticalThreshold, granularity, packetDropFactor, userconfig, maxScorePossible);
+    LSDS(packets, 0, timeperiod, stations_count, criticalThreshold, granularity, packetDropFactor, userconfig);
     // auto t3 = high_resolution_clock::now();
     // auto dur1 = duration_cast<microseconds>(t1 - start);
     // auto dur2 = duration_cast<microseconds>(t3 - t2);

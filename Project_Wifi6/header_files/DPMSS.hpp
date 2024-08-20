@@ -286,10 +286,10 @@ vector<IntervalData> LSDS(vector<Packet> &packets, int start_time, int T, int st
     sort(selectedIntervals.begin(), selectedIntervals.end(), [](IntervalData &i1, IntervalData &i2)
          { return i1.start < i2.start; });
 
-    // cout << "Heuristic Score, total dropped, critical dropped:\n";
-    // cout << score << " ";
-    // cout << totalDropped << " ";
-    // cout << criticalDropped << "\n";
+    cout << "Heuristic Score, total dropped, critical dropped:\n";
+    cout << score << " ";
+    cout << totalDropped << " ";
+    cout << criticalDropped << "\n";
 
     return selectedIntervals;
 }
